@@ -45,7 +45,7 @@ main(int argc, char *argv[])
 			system(evalbuf);
 
 			free(evalbuf);
-			ptr = end + close_delim_len + 1;
+			ptr = end + close_delim_len;
 		} else
 			fwrite(open_delim, 1, open_delim_len, stdout);
 	}
