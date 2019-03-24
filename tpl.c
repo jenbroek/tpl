@@ -5,23 +5,56 @@
 #include <string.h>
 
 #include "util.h"
-
+#include "arg.h"
 #include "config.h"
+
+static void usage();
+
+char *argv0;
+
+void
+usage()
+{
+	die("usage: %s [-v] [-d open_delim] [-D close_delim] [file]", argv0);
+}
 
 int
 main(int argc, char *argv[])
 {
-	char *ptr, *start, *end;
-	char *buf = ecalloc(1, BUFSIZ);
+	FILE *fp;
 
-	int i;
+	char *buf, *evalbuf;
+	char *ptr, *start, *end;
+
+	int i, evallen;
+	int open_delim_len;
+	int close_delim_len;
+
 	unsigned long len = 0;
 	unsigned long size = BUFSIZ;
 
-	int open_delim_len = strlen(open_delim);
-	int close_delim_len = strlen(close_delim);
+	ARGBEGIN {
+	case 'v':
+		fprintf(stderr, "%s-"VERSION"\n", argv0);
+		return 0;
+	case 'd':
+		open_delim = EARGF(usage());
+		break;
+	case 'D':
+		close_delim = EARGF(usage());
+		break;
+	default:
+		usage();
+	} ARGEND
 
-	while ((i = fread(buf + len, 1, BUFSIZ, stdin))) {
+	if (!argv[0] || !strcmp(argv[0], "-"))
+		fp = stdin;
+	else if (!(fp = fopen(argv[0], "r")))
+		die("%s: unable to open '%s' for reading:", argv0, argv[0]);
+
+	buf = ecalloc(1, size);
+
+	while ((i = fread(buf + len, 1, BUFSIZ, fp))) {
 		len += i;
 		if (BUFSIZ + len + 1 > size) {
 			size += BUFSIZ;
@@ -32,13 +65,16 @@ main(int argc, char *argv[])
 	buf[len] = '\0';
 	ptr = buf;
 
+	open_delim_len = strlen(open_delim);
+	close_delim_len = strlen(close_delim);
+
 	while ((start = strstr(ptr, open_delim))) {
 		fwrite(ptr, 1, start - ptr, stdout);
 		ptr = start + open_delim_len;
 
 		if ((end = strstr(ptr, close_delim))) {
-			int evallen = end - ptr;
-			char *evalbuf = ecalloc(1, evallen);
+			evallen = end - ptr;
+			evalbuf = ecalloc(1, evallen);
 
 			memmove(evalbuf, ptr, evallen);
 			fflush(stdout);
