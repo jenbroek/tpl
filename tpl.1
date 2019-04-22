@@ -1,0 +1,51 @@
+.Dd 2019-04-22
+.Dt TPL 1
+.Os
+.Sh NAME
+.Nm tpl
+.Nd shell templating utility
+.Sh SYNOPSIS
+.Nm
+.Op Fl v
+.Op Fl o Ar open_delim
+.Op Fl c Ar close_delim
+.Op Ar file
+.Sh DESCRIPTION
+.Nm
+looks for
+.Ar open_delim
+and
+.Ar close_delim
+in
+.Ar file ,
+and passes commands inside it to
+.Pa /bin/sh .
+If no
+.Ar file
+is given,
+.Nm
+reads from stdin.
+Text outside
+.Ar open_delim
+and
+.Ar close_delim
+is written to stdout.
+Nesting of blocks is not supported.
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl v
+Print version information to stderr and exit.
+.It Fl o Ar open_delim
+Define the opening delimiter (default: "{{").
+.It Fl c Ar close_delim
+Define the closing delimiter (default: "}}").
+.El
+.Sh EXAMPLES
+Parse 'options.conf' and redirect stdout to '../options.conf'
+.Dl $ tpl options.conf > ../options.conf
+Parse commands between delimiters '[[' and ']]' in 'options.conf'
+.Dl $ tpl -o [[ -c ]] options.conf
+Redirect a here-document to tpl
+.Dl $ tpl << 'EOF'
+.Sh SEE ALSO
+.Xr sh 1

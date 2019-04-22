@@ -3,6 +3,7 @@ tpl - shell templating utility
 tpl reads from standard input, executing shell commands inside
 delimiters (default: '{{' and '}}', but modifiable through config.h).
 
+
 Installation
 ------------
 Edit config.mk to match your local setup (tpl is installed into
@@ -17,3 +18,4 @@ necessary as root):
 Running tpl
 -----------
 Simply invoke 'tpl', optionally redirecting input/output.
+See the man page for details.

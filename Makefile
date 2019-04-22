@@ -33,7 +33,7 @@ clean:
 
 dist: clean
 	mkdir -p tpl-$(VERSION)
-	cp -R LICENSE Makefile README.md arg.h config.def.h config.mk $(SRC) LICENSE-suckless util.h tpl-$(VERSION)
+	cp -R LICENSE Makefile README.md arg.h config.def.h config.mk $(SRC) tpl.1 LICENSE-suckless util.h tpl-$(VERSION)
 	tar -cf tpl-$(VERSION).tar tpl-$(VERSION)
 	gzip tpl-$(VERSION).tar
 	rm -rf tpl-$(VERSION)
@@ -42,8 +42,11 @@ install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp -f tpl $(DESTDIR)$(PREFIX)/bin
 	chmod 755 $(DESTDIR)$(PREFIX)/bin/tpl
+	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
+	cp -f tpl.1 $(DESTDIR)$(MANPREFIX)/man1
+	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/tpl.1
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/tpl
+	rm -f $(DESTDIR)$(PREFIX)/bin/tpl $(DESTDIR)$(MANPREFIX)/man1/tpl.1
 
 .PHONY: all options clean dist install uninstall
