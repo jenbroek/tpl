@@ -1,4 +1,3 @@
 tpl
-tpl.o
-util.o
+*.o
 config.h
