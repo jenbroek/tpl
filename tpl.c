@@ -1,80 +1,36 @@
 /* See LICENSE file for copyright and license details. */
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "util.h"
 #include "arg.h"
 #include "config.h"
+#include "util.h"
 
+static void run();
+static void load(FILE *fp);
 static void usage();
 
 char *argv0;
+static char *buf;
 
 void
-usage()
+run()
 {
-	die("usage: %s [-v] [-d open_delim] [-D close_delim] [file]", argv0);
-}
+	char *ptr = buf;
+	char *begin, *end, *evalbuf;
 
-int
-main(int argc, char *argv[])
-{
-	FILE *fp;
+	size_t evallen;
+	size_t open_delim_len = strlen(open_delim);
+	size_t close_delim_len = strlen(close_delim);
 
-	char *buf, *evalbuf;
-	char *ptr, *start, *end;
-
-	int i, evallen;
-	int open_delim_len;
-	int close_delim_len;
-
-	unsigned long len = 0;
-	unsigned long size = BUFSIZ;
-
-	ARGBEGIN {
-	case 'v':
-		fprintf(stderr, "%s-"VERSION"\n", argv0);
-		return 0;
-	case 'd':
-		open_delim = EARGF(usage());
-		break;
-	case 'D':
-		close_delim = EARGF(usage());
-		break;
-	default:
-		usage();
-	} ARGEND
-
-	if (!argv[0] || !strcmp(argv[0], "-"))
-		fp = stdin;
-	else if (!(fp = fopen(argv[0], "r")))
-		die("%s: unable to open '%s' for reading:", argv0, argv[0]);
-
-	buf = ecalloc(1, size);
-
-	while ((i = fread(buf + len, 1, BUFSIZ, fp))) {
-		len += i;
-		if (BUFSIZ + len + 1 > size) {
-			size += BUFSIZ;
-			buf = erealloc(buf, size);
-		}
-	}
-
-	buf[len] = '\0';
-	ptr = buf;
-
-	open_delim_len = strlen(open_delim);
-	close_delim_len = strlen(close_delim);
-
-	while ((start = strstr(ptr, open_delim))) {
-		fwrite(ptr, 1, start - ptr, stdout);
-		ptr = start + open_delim_len;
+	while ((begin = strstr(ptr, open_delim))) {
+		fwrite(ptr, begin - ptr, 1, stdout);
+		ptr = begin + open_delim_len;
 
 		if ((end = strstr(ptr, close_delim))) {
 			evallen = end - ptr;
-			evalbuf = ecalloc(1, evallen);
+			evalbuf = ecalloc(1, evallen + 1);
 
 			memmove(evalbuf, ptr, evallen);
 			fflush(stdout);
@@ -82,11 +38,59 @@ main(int argc, char *argv[])
 
 			free(evalbuf);
 			ptr = end + close_delim_len;
-		} else
-			fwrite(open_delim, 1, open_delim_len, stdout);
+		} else {
+			fwrite(open_delim, open_delim_len, 1, stdout);
+		}
 	}
 
-	fwrite(ptr, 1, strlen(ptr), stdout);
+	fwrite(ptr, strlen(ptr), 1, stdout);
+}
+
+void
+load(FILE *fp)
+{
+	size_t len = 0;
+	buf = ecalloc(1, BUFSIZ);
+
+	while ((fread(buf + len, BUFSIZ, 1, fp))) {
+		len += BUFSIZ;
+		buf = erealloc(buf, len + BUFSIZ);
+	}
+}
+
+void
+usage()
+{
+	die("usage: %s [-v] [-o open_delim] [-c close_delim] [file]", argv0);
+}
+
+int
+main(int argc, char *argv[])
+{
+	FILE *fp = stdin;
+
+	ARGBEGIN {
+	case 'v':
+		fprintf(stderr, "%s-"VERSION"\n", argv0);
+		return 0;
+	case 'o':
+		open_delim = EARGF(usage());
+		break;
+	case 'c':
+		close_delim = EARGF(usage());
+		break;
+	default:
+		usage();
+	} ARGEND
+
+	if (argv[0] && !(fp = fopen(argv[0], "rb")))
+		die("unable to open '%s' for reading:", argv[0]);
+
+	load(fp);
+	fclose(fp);
+
+	run();
 	free(buf);
+
 	return 0;
 }
