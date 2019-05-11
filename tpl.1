@@ -1,4 +1,4 @@
-.Dd 2019-04-22
+.Dd 2019-05-11
 .Dt TPL 1
 .Os
 .Sh NAME
@@ -19,7 +19,9 @@ and
 in
 .Ar file ,
 and passes commands inside it to
-.Pa /bin/sh .
+.Ev $TPL_SHELL
+(if set) or
+.Ev $SHELL .
 If no
 .Ar file
 is given,
