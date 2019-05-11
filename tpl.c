@@ -17,8 +17,8 @@ static char *buf;
 void
 run()
 {
-	char *ptr = buf;
-	char *begin, *end, *evalbuf;
+	char *begin, *end;
+	char *ptr = buf, *evalbuf;
 
 	size_t evallen;
 	size_t open_delim_len = strlen(open_delim);
@@ -31,8 +31,8 @@ run()
 		if ((end = strstr(ptr, close_delim))) {
 			evallen = end - ptr;
 			evalbuf = ecalloc(1, evallen + 1);
+			memcpy(evalbuf, ptr, evallen);
 
-			memmove(evalbuf, ptr, evallen);
 			fflush(stdout);
 			system(evalbuf);
 
