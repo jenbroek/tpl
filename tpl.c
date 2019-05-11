@@ -1,18 +1,65 @@
 /* See LICENSE file for copyright and license details. */
+#include <errno.h>
+#include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include "arg.h"
 #include "config.h"
 #include "util.h"
 
+static void shell(const char *cmd);
 static void run();
 static void load(FILE *fp);
 static void usage();
 
 char *argv0;
 static char *buf;
+
+void
+shell(const char *cmd)
+{
+	pid_t pid;
+	char *sh;
+
+	sigset_t old;
+	struct sigaction oldint, oldquit;
+	struct sigaction sa = { .sa_handler = SIG_IGN };
+
+	if (!cmd)
+		return;
+
+	if (!(sh = getenv("TPL_SHELL")) && !(sh = getenv("SHELL")))
+		die("unable to determine shell");
+
+	sigaction(SIGINT, &sa, &oldint);
+	sigaction(SIGQUIT, &sa, &oldquit);
+
+	sigaddset(&sa.sa_mask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, &sa.sa_mask, &old);
+
+	switch ((pid = fork())) {
+	case -1:
+		break;
+	case 0:
+		sigaction(SIGINT, &oldint, NULL);
+		sigaction(SIGQUIT, &oldquit, NULL);
+		sigprocmask(SIG_SETMASK, &old, NULL);
+
+		execl(sh, basename(sh), "-c", cmd, NULL);
+		_exit(127);
+	default:
+		while (waitpid(pid, NULL, 0) < 0 && errno == EINTR);
+		break;
+	}
+
+	sigaction(SIGINT, &oldint, NULL);
+	sigaction(SIGQUIT, &oldquit, NULL);
+	sigprocmask(SIG_SETMASK, &old, NULL);
+}
 
 void
 run()
@@ -34,7 +81,7 @@ run()
 			memcpy(evalbuf, ptr, evallen);
 
 			fflush(stdout);
-			system(evalbuf);
+			shell(evalbuf);
 
 			free(evalbuf);
 			ptr = end + close_delim_len;
