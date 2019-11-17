@@ -33,7 +33,7 @@ shell(const char *cmd)
 		return;
 
 	if (!(sh = getenv("TPL_SHELL")) && !(sh = getenv("SHELL")))
-		die("unable to determine shell");
+		die("%s: unable to determine shell", argv0);
 
 	sigaction(SIGINT, &sa, &oldint);
 	sigaction(SIGQUIT, &sa, &oldquit);
@@ -99,7 +99,7 @@ load(FILE *fp)
 	size_t len = 0;
 	buf = ecalloc(1, BUFSIZ);
 
-	while ((fread(buf + len, BUFSIZ, 1, fp))) {
+	while ((fread(buf + len, 1, BUFSIZ, fp))) {
 		len += BUFSIZ;
 		buf = erealloc(buf, len + BUFSIZ);
 	}
@@ -131,7 +131,7 @@ main(int argc, char *argv[])
 	} ARGEND
 
 	if (argv[0] && !(fp = fopen(argv[0], "rb")))
-		die("unable to open '%s' for reading:", argv[0]);
+		die("%s: unable to open '%s' for reading:", argv0, argv[0]);
 
 	load(fp);
 	fclose(fp);
