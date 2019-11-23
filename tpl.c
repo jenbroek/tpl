@@ -102,6 +102,7 @@ load(FILE *fp)
 	while ((fread(buf + len, 1, BUFSIZ, fp))) {
 		len += BUFSIZ;
 		buf = erealloc(buf, len + BUFSIZ);
+		memset(buf + len, 0, BUFSIZ);
 	}
 }
 
