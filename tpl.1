@@ -1,4 +1,4 @@
-.Dd 2019-05-11
+.Dd 2019-12-12
 .Dt TPL 1
 .Os
 .Sh NAME
@@ -41,6 +41,11 @@ Print version information to stderr and exit.
 Define the opening delimiter (default: "{{").
 .It Fl c Ar close_delim
 Define the closing delimiter (default: "}}").
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width Ds
+.It Ev TPL_SHELL
+The pathname of the shell to which commands are passed.
 .El
 .Sh EXAMPLES
 Parse 'options.conf' and redirect stdout to '../options.conf'
