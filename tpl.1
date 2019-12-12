@@ -9,38 +9,41 @@
 .Op Fl v
 .Op Fl o Ar open_delim
 .Op Fl c Ar close_delim
+.Op Fl -
 .Op Ar file
 .Sh DESCRIPTION
 .Nm
-looks for
+is a shell templating utility that looks for
 .Ar open_delim
 and
 .Ar close_delim
 in
 .Ar file ,
-and passes commands inside it to
-.Ev $TPL_SHELL
-(if set) or
-.Ev $SHELL .
+and executes the commands inside it.
+
+The commands are passed as arguments to
+.Ql Ev TPL_SHELL -c
+if
+.Ev TPL_SHELL
+is set, else to
+.Ql Ev SHELL -c .
 If no
 .Ar file
 is given,
 .Nm
 reads from stdin.
-Text outside
-.Ar open_delim
-and
-.Ar close_delim
-is written to stdout.
-Nesting of blocks is not supported.
+
+Text outside the delimiters is written to stdout. Nesting of blocks is not supported.
 .Sh OPTIONS
 .Bl -tag -width Ds
 .It Fl v
 Print version information to stderr and exit.
 .It Fl o Ar open_delim
-Define the opening delimiter (default: "{{").
+Define the opening delimiter (default:
+.Sq {{ ) .
 .It Fl c Ar close_delim
-Define the closing delimiter (default: "}}").
+Define the closing delimiter (default:
+.Sq }} ) .
 .El
 .Sh ENVIRONMENT
 .Bl -tag -width Ds
@@ -48,11 +51,34 @@ Define the closing delimiter (default: "}}").
 The pathname of the shell to which commands are passed.
 .El
 .Sh EXAMPLES
-Parse 'options.conf' and redirect stdout to '../options.conf'
-.Dl $ tpl options.conf > ../options.conf
-Parse commands between delimiters '[[' and ']]' in 'options.conf'
-.Dl $ tpl -o [[ -c ]] options.conf
-Redirect a here-document to tpl
-.Dl $ tpl << 'EOF'
+Parse
+.Sq options.conf
+and redirect stdout to
+.Sq ../options.conf
+.Bd -filled -offset indent
+$
+.Nm
+options.conf > ../options.conf
+.Ed
+
+Parse commands between delimiters
+.Sq [[
+and
+.Sq ]]
+in
+.Sq options.conf
+.Bd -filled -offset indent
+$
+.Nm
+-o [[ -c ]] options.conf
+.Ed
+
+Redirect a here-document to
+.Nm
+.Bd -filled -offset indent
+$
+.Nm
+<< 'EOF'
+.Ed
 .Sh SEE ALSO
 .Xr sh 1
