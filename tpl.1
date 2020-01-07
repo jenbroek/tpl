@@ -7,18 +7,18 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl v
-.Op Fl o Ar open_delim
-.Op Fl c Ar close_delim
+.Op Fl o Ar OPEN_DELIM
+.Op Fl c Ar CLOSE_DELIM
 .Op Fl -
-.Op Ar file
+.Op Ar FILE
 .Sh DESCRIPTION
 .Nm
 is a shell templating utility that looks for
-.Ar open_delim
+.Ar OPEN_DELIM
 and
-.Ar close_delim
+.Ar CLOSE_DELIM
 in
-.Ar file ,
+.Ar FILE ,
 and executes the commands inside it.
 
 The commands are passed as arguments to
@@ -28,7 +28,7 @@ if
 is set, else to
 .Ql Ev SHELL -c .
 If no
-.Ar file
+.Ar FILE
 is given,
 .Nm
 reads from stdin.
@@ -38,10 +38,10 @@ Text outside the delimiters is written to stdout. Nesting of blocks is not suppo
 .Bl -tag -width Ds
 .It Fl v
 Print version information to stderr and exit.
-.It Fl o Ar open_delim
+.It Fl o Ar OPEN_DELIM
 Define the opening delimiter (default:
 .Sq {{ ) .
-.It Fl c Ar close_delim
+.It Fl c Ar CLOSE_DELIM
 Define the closing delimiter (default:
 .Sq }} ) .
 .El

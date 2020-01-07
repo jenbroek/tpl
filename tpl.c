@@ -109,7 +109,7 @@ load(FILE *fp)
 void
 usage()
 {
-	die("usage: %s [-v] [-o open_delim] [-c close_delim] [file]", argv0);
+	die("usage: %s [-v] [-o OPEN_DELIM] [-c CLOSE_DELIM] [FILE]", argv0);
 }
 
 int
