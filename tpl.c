@@ -52,7 +52,7 @@ shell(const char *cmd)
 		execl(sh, basename(sh), "-c", cmd, NULL);
 		_exit(127);
 	default:
-		while (waitpid(pid, NULL, 0) < 0 && errno == EINTR);
+		waitpid(pid, NULL, 0);
 		break;
 	}
 
