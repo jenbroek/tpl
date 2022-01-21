@@ -64,10 +64,8 @@ shell(const char *cmd)
 void
 run()
 {
-	char *begin, *end;
-	char *ptr = buf, *evalbuf;
+	char *begin, *end, *ptr = buf;
 
-	size_t evallen;
 	size_t open_delim_len = strlen(open_delim);
 	size_t close_delim_len = strlen(close_delim);
 
@@ -76,14 +74,11 @@ run()
 		ptr = begin + open_delim_len;
 
 		if ((end = strstr(ptr, close_delim))) {
-			evallen = end - ptr;
-			evalbuf = ecalloc(1, evallen + 1);
-			memcpy(evalbuf, ptr, evallen);
+			memset(end, 0, 1);
 
 			fflush(stdout);
-			shell(evalbuf);
+			shell(ptr);
 
-			free(evalbuf);
 			ptr = end + close_delim_len;
 		} else {
 			fwrite(open_delim, open_delim_len, 1, stdout);
