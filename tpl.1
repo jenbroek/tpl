@@ -9,6 +9,7 @@
 .Op Fl v
 .Op Fl o Ar OPEN_DELIM
 .Op Fl c Ar CLOSE_DELIM
+.Op Fl t Ar TRIM_CHARS
 .Op Fl -
 .Op Ar FILE
 .Sh DESCRIPTION
@@ -33,6 +34,14 @@ is given,
 .Nm
 reads from stdin.
 
+If
+.Ar TRIM_CHARS
+is found directly before
+.Ar CLOSE_DELIM ,
+the character directly after
+.Ar CLOSE_DELIM
+is trimmed.
+
 Text outside the delimiters is written to stdout. Nesting of blocks is not supported.
 .Sh OPTIONS
 .Bl -tag -width Ds
@@ -44,6 +53,9 @@ Define the opening delimiter (default:
 .It Fl c Ar CLOSE_DELIM
 Define the closing delimiter (default:
 .Sq }} ) .
+.It Fl t Ar TRIM_CHARS
+Define the string to look for to enable trimming (default:
+.Sq - ) .
 .El
 .Sh ENVIRONMENT
 .Bl -tag -width Ds

@@ -76,22 +76,31 @@ shell(const char *cmd)
 void
 run()
 {
+	int trim;
 	char *begin, *end, *ptr = buf;
 
 	size_t open_delim_len = strlen(open_delim);
 	size_t close_delim_len = strlen(close_delim);
+	size_t trim_chars_len = strlen(trim_chars);
 
 	while ((begin = strstr(ptr, open_delim))) {
 		fwrite(ptr, begin - ptr, 1, stdout);
 		ptr = begin + open_delim_len;
 
 		if ((end = strstr(ptr, close_delim))) {
+			if (!strncmp(end - trim_chars_len, trim_chars, trim_chars_len)) {
+				trim = 1;
+				end -= trim_chars_len;
+			} else {
+				trim = 0;
+			}
+
 			memset(end, 0, 1);
 
 			fflush(stdout);
 			shell(ptr);
 
-			ptr = end + close_delim_len;
+			ptr = end + close_delim_len + (trim ? trim_chars_len + 1 : 0);
 		} else {
 			fwrite(open_delim, open_delim_len, 1, stdout);
 		}
@@ -116,7 +125,7 @@ load(FILE *fp)
 void
 usage()
 {
-	die("usage: %s [-v] [-o OPEN_DELIM] [-c CLOSE_DELIM] [FILE]", argv0);
+	die("usage: %s [-v] [-o OPEN_DELIM] [-c CLOSE_DELIM] [-t TRIM_CHARS] [FILE]", argv0);
 }
 
 int
@@ -133,6 +142,9 @@ main(int argc, char *argv[])
 		break;
 	case 'c':
 		close_delim = EARGF(usage());
+		break;
+	case 't':
+		trim_chars = EARGF(usage());
 		break;
 	default:
 		usage();
