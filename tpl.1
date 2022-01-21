@@ -21,12 +21,12 @@ in
 .Ar FILE ,
 and executes the commands inside it.
 
-The commands are passed as arguments to
-.Ql Ev TPL_SHELL -c
+The commands are passed to standard input of
+.Ql Ev TPL_SHELL
 if
 .Ev TPL_SHELL
 is set, else to
-.Ql Ev SHELL -c .
+.Ql Ev SHELL .
 If no
 .Ar FILE
 is given,

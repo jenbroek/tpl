@@ -23,6 +23,7 @@ void
 shell(const char *cmd)
 {
 	pid_t pid;
+	int pipefd[2];
 	char *sh;
 
 	sigset_t old;
@@ -34,6 +35,9 @@ shell(const char *cmd)
 
 	if (!(sh = getenv("TPL_SHELL")) && !(sh = getenv("SHELL")))
 		die("%s: unable to determine shell", argv0);
+
+	if (pipe(pipefd))
+		die("%s: unable to create pipe:", argv0);
 
 	sigaction(SIGINT, &sa, &oldint);
 	sigaction(SIGQUIT, &sa, &oldquit);
@@ -49,9 +53,17 @@ shell(const char *cmd)
 		sigaction(SIGQUIT, &oldquit, NULL);
 		sigprocmask(SIG_SETMASK, &old, NULL);
 
-		execl(sh, basename(sh), "-c", cmd, NULL);
+		close(pipefd[1]);
+		dup2(pipefd[0], STDIN_FILENO);
+		close(pipefd[0]);
+
+		execl(sh, basename(sh), NULL);
 		_exit(127);
 	default:
+		close(pipefd[0]);
+		if (write(pipefd[1], cmd, strlen(cmd) + 1) < 0)
+			die("%s: unable to write to pipe:", argv0);
+		close(pipefd[1]);
 		waitpid(pid, NULL, 0);
 		break;
 	}
