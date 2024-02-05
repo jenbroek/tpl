@@ -2,12 +2,12 @@
 # See LICENSE file for copyright and license details.
 
 .POSIX:
-.SUFFIXES: .c .o
 
 include config.mk
 
 SRC = tpl.c util.c
 OBJ = $(SRC:.c=.o)
+DEPS = config.h arg.h util.h
 
 all: options tpl
 
@@ -17,10 +17,7 @@ options:
 	@echo "LDFLAGS  = $(LDFLAGS)"
 	@echo "CC       = $(CC)"
 
-.c.o:
-	$(CC) -c $(CFLAGS) $<
-
-$(OBJ): arg.h config.h config.mk util.h
+$(OBJ): $(DEPS) config.mk
 
 config.h:
 	cp config.def.h $@
@@ -33,9 +30,8 @@ clean:
 
 dist: clean
 	mkdir -p tpl-$(VERSION)
-	cp -R LICENSE Makefile README.md arg.h config.def.h config.mk $(SRC) tpl.1 LICENSE-suckless util.h tpl-$(VERSION)
-	tar -cf tpl-$(VERSION).tar tpl-$(VERSION)
-	gzip tpl-$(VERSION).tar
+	cp -R LICENSE LICENSE-suckless README.md config.mk Makefile $(SRC) $(DEPS) tpl.1 tpl-$(VERSION)
+	tar czf tpl-$(VERSION).tar.gz tpl-$(VERSION)
 	rm -rf tpl-$(VERSION)
 
 install: all
