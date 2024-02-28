@@ -1,6 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 #include <errno.h>
 #include <libgen.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,12 +13,11 @@
 #include "util.h"
 
 static void shell(const char *cmd);
-static void run();
-static void load(FILE *fp);
+static void run(FILE *fp);
+static int load(char **buf, FILE *fp, size_t len);
 static void usage();
 
 char *argv0;
-static char *buf;
 
 void
 shell(const char *cmd)
@@ -74,52 +74,76 @@ shell(const char *cmd)
 }
 
 void
-run()
+run(FILE *fp)
 {
-	int trim;
-	char *begin, *end, *ptr = buf;
+	int trim = 0, eval = 0;
+	char *buf = NULL, *ptr, *begin, *end;
+
+	size_t len = 0;
+	ptrdiff_t offset = 0;
 
 	size_t open_delim_len = strlen(open_delim);
 	size_t close_delim_len = strlen(close_delim);
 	size_t trim_chars_len = strlen(trim_chars);
 
-	while ((begin = strstr(ptr, open_delim))) {
-		fwrite(ptr, begin - ptr, 1, stdout);
-		ptr = begin + open_delim_len;
+	while (load(&buf, fp, len)) {
+		ptr = buf + offset;
 
-		if ((end = strstr(ptr, close_delim))) {
-			if (!strncmp(end - trim_chars_len, trim_chars, trim_chars_len)) {
-				trim = 1;
-				end -= trim_chars_len;
-			} else {
-				trim = 0;
+		if (eval) {
+			if ((end = strstr(ptr, close_delim))) {
+				eval = 0;
+				goto close_delim_found;
 			}
 
-			memset(end, 0, 1);
+			goto load_next;
+		}
 
-			fflush(stdout);
-			shell(ptr);
+		while ((begin = strstr(ptr, open_delim))) {
+			fwrite(ptr, begin - ptr, 1, stdout);
+			ptr = begin + open_delim_len;
 
-			ptr = end + close_delim_len + (trim ? trim_chars_len + 1 : 0);
+			if ((end = strstr(ptr, close_delim))) {
+close_delim_found:
+				if (!strncmp(end - trim_chars_len, trim_chars, trim_chars_len)) {
+					trim = trim_chars_len + 1;
+					end -= trim_chars_len;
+				} else {
+					trim = 0;
+				}
+
+				memset(end, 0, 1);
+
+				fflush(stdout);
+				shell(ptr);
+
+				ptr = end + close_delim_len + trim;
+			} else {
+				eval = 1;
+				goto load_next;
+			}
+		}
+
+		if (!strncmp(ptr+strlen(ptr)-1, open_delim, 1)) {
+load_next:
+			offset = ptr - buf;
+			len += BUFSIZ;
 		} else {
-			fwrite(open_delim, open_delim_len, 1, stdout);
+			fwrite(ptr, strlen(ptr), 1, stdout);
+			memset(buf, 0, ptr-buf);
+			offset = 0;
+			len = 0;
 		}
 	}
 
-	fwrite(ptr, strlen(ptr), 1, stdout);
+	free(buf);
 }
 
-void
-load(FILE *fp)
+int
+load(char **buf, FILE *fp, size_t len)
 {
-	size_t len = 0;
-	buf = ecalloc(1, BUFSIZ);
-
-	while ((fread(buf + len, 1, BUFSIZ, fp))) {
-		len += BUFSIZ;
-		buf = erealloc(buf, len + BUFSIZ);
-		memset(buf + len, 0, BUFSIZ);
-	}
+	*buf = erealloc(*buf, len + BUFSIZ);
+	memset(*buf + len, 0, BUFSIZ);
+	return fread(*buf + len, 1, BUFSIZ, fp);
 }
 
 void
@@ -153,11 +177,8 @@ main(int argc, char *argv[])
 	if (argv[0] && !(fp = fopen(argv[0], "rb")))
 		die("%s: unable to open '%s' for reading:", argv0, argv[0]);
 
-	load(fp);
+	run(fp);
 	fclose(fp);
-
-	run();
-	free(buf);
 
 	return 0;
 }
