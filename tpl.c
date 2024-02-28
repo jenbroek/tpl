@@ -1,5 +1,4 @@
 /* See LICENSE file for copyright and license details. */
-#include <errno.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -26,10 +25,6 @@ shell(const char *cmd)
 	int pipefd[2];
 	char *sh;
 
-	sigset_t old;
-	struct sigaction oldint, oldquit;
-	struct sigaction sa = { .sa_handler = SIG_IGN };
-
 	if (!cmd)
 		return;
 
@@ -39,20 +34,10 @@ shell(const char *cmd)
 	if (pipe(pipefd))
 		die("%s: unable to create pipe:", argv0);
 
-	sigaction(SIGINT, &sa, &oldint);
-	sigaction(SIGQUIT, &sa, &oldquit);
-
-	sigaddset(&sa.sa_mask, SIGCHLD);
-	sigprocmask(SIG_BLOCK, &sa.sa_mask, &old);
-
 	switch ((pid = fork())) {
 	case -1:
 		break;
 	case 0:
-		sigaction(SIGINT, &oldint, NULL);
-		sigaction(SIGQUIT, &oldquit, NULL);
-		sigprocmask(SIG_SETMASK, &old, NULL);
-
 		close(pipefd[1]);
 		dup2(pipefd[0], STDIN_FILENO);
 		close(pipefd[0]);
@@ -67,10 +52,6 @@ shell(const char *cmd)
 		waitpid(pid, NULL, 0);
 		break;
 	}
-
-	sigaction(SIGINT, &oldint, NULL);
-	sigaction(SIGQUIT, &oldquit, NULL);
-	sigprocmask(SIG_SETMASK, &old, NULL);
 }
 
 void
@@ -111,7 +92,7 @@ close_delim_found:
 					trim = 0;
 				}
 
-				memset(end, 0, 1);
+				memset(end, '\0', 1);
 
 				fflush(stdout);
 				shell(ptr);
