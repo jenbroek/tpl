@@ -17,19 +17,16 @@ static int load(char **buf, FILE *fp, size_t len);
 static void usage();
 
 char *argv0;
+static char *sh;
 
 void
 shell(const char *cmd)
 {
 	pid_t pid;
 	int pipefd[2];
-	char *sh;
 
 	if (!cmd)
 		return;
-
-	if (!(sh = getenv("TPL_SHELL")) && !(sh = getenv("SHELL")))
-		die("%s: unable to determine shell", argv0);
 
 	if (pipe(pipefd))
 		die("%s: unable to create pipe:", argv0);
@@ -42,7 +39,7 @@ shell(const char *cmd)
 		dup2(pipefd[0], STDIN_FILENO);
 		close(pipefd[0]);
 
-		execl(sh, basename(sh), NULL);
+		execlp(sh, sh, NULL);
 		_exit(127);
 	default:
 		close(pipefd[0]);
@@ -157,6 +154,9 @@ main(int argc, char *argv[])
 
 	if (argv[0] && !(fp = fopen(argv[0], "rb")))
 		die("%s: unable to open '%s' for reading:", argv0, argv[0]);
+
+	if (!(sh = getenv("TPL_SHELL")) && !(sh = getenv("SHELL")))
+		die("%s: unable to determine shell", argv0);
 
 	run(fp);
 	fclose(fp);
